@@ -1,0 +1,16 @@
+{
+  "dataset_id": "kespeech_dev_phase1",
+  "language": "zh",
+  "difficulty": "hard",
+  "description": "KeSpeech dev_phase1 imported from the sibling recipe if available.",
+  "source_url": "https://github.com/KeSpeech/KeSpeech",
+  "manual_download": true,
+  "prep_kind": "existing_cut_import",
+  "status": "blocked",
+  "bench_dataset_root": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/kespeech_dev_phase1",
+  "expected_existing_cut_candidates": [
+    "egs/multi_zh-hans/ASR/data/fbank/kespeech/kespeech-asr_cuts_dev_phase1.jsonl.gz"
+  ],
+  "blocked_reason": "FileNotFoundError: Could not locate an existing cut manifest for kespeech_dev_phase1. Tried: egs/multi_zh-hans/ASR/data/fbank/kespeech/kespeech-asr_cuts_dev_phase1.jsonl.gz",
+  "generated_at_utc": "2026-04-20T06:41:31.885104+00:00"
+}

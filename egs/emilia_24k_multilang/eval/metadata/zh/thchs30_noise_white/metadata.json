@@ -1,0 +1,13 @@
+{
+  "dataset_id": "thchs30_noise_white",
+  "language": "zh",
+  "difficulty": "hard",
+  "description": "THCHS-30 white-noise 0 dB test split.",
+  "source_url": "https://www.openslr.org/18",
+  "manual_download": false,
+  "prep_kind": "thchs30_noise",
+  "status": "prepared",
+  "bench_dataset_root": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/thchs30_noise_white",
+  "prepared_cut_path": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/thchs30_noise_white/fbank/thchs30_noise_white_cuts.jsonl.gz",
+  "generated_at_utc": "2026-04-22T03:41:00.758605+00:00"
+}

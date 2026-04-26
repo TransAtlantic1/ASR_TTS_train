@@ -1,0 +1,13 @@
+{
+  "dataset_id": "GIGASPEECH_V1.0.0_DEV",
+  "language": "en",
+  "difficulty": "medium",
+  "description": "GigaSpeech v1.0.0 DEV split.",
+  "source_url": "https://github.com/SpeechColab/GigaSpeech",
+  "manual_download": true,
+  "prep_kind": "gigaspeech_eval",
+  "status": "prepared",
+  "bench_dataset_root": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/GIGASPEECH_V1.0.0_DEV",
+  "prepared_cut_path": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/GIGASPEECH_V1.0.0_DEV/fbank/GIGASPEECH_V1.0.0_DEV_cuts.jsonl.gz",
+  "generated_at_utc": "2026-04-21T15:24:14.909542+00:00"
+}

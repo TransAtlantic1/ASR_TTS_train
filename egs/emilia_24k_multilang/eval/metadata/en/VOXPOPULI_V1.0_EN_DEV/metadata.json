@@ -1,0 +1,13 @@
+{
+  "dataset_id": "VOXPOPULI_V1.0_EN_DEV",
+  "language": "en",
+  "difficulty": "medium",
+  "description": "VoxPopuli v1.0 English dev split.",
+  "source_url": "https://github.com/facebookresearch/voxpopuli",
+  "manual_download": false,
+  "prep_kind": "voxpopuli_eval",
+  "status": "prepared",
+  "bench_dataset_root": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/VOXPOPULI_V1.0_EN_DEV",
+  "prepared_cut_path": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/VOXPOPULI_V1.0_EN_DEV/fbank/VOXPOPULI_V1.0_EN_DEV_cuts.jsonl.gz",
+  "generated_at_utc": "2026-04-24T17:38:52.154902+00:00"
+}

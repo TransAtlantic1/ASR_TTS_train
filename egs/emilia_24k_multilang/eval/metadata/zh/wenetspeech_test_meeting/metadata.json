@@ -1,0 +1,12 @@
+{
+  "dataset_id": "wenetspeech_test_meeting",
+  "language": "zh",
+  "difficulty": "hard",
+  "description": "WenetSpeech TEST_MEETING imported from the sibling recipe if available.",
+  "source_url": "https://github.com/wenet-e2e/WenetSpeech",
+  "manual_download": true,
+  "prep_kind": "existing_cut_import",
+  "bench_dataset_root": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/wenetspeech_test_meeting",
+  "prepared_cut_path": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/wenetspeech_test_meeting/fbank/wenetspeech_test_meeting_cuts.jsonl.gz",
+  "generated_at_utc": "2026-04-21T10:27:25.474024+00:00"
+}

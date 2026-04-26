@@ -1,0 +1,25 @@
+Full ZH eval launch command
+
+```bash
+conda run -n icefall bash -lc '
+set -euo pipefail
+RECIPE=/inspire/hdd/project/embodied-multimodality/chenxie-25019/fj/icefall/egs/emilia_24k_multilang/eval/recipe/run_eval_zh.sh
+PUBLIC_ROOT=/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/emilia/fc71e07/icefall_emilia_zh_24k
+EXP_DIR=${PUBLIC_ROOT}/exp/zipformer/emilia-zh-24k-h200-md1000/full.zh.20260414_191852/run-20260414-191901
+RESULTS_ROOT=${PUBLIC_ROOT}/eval_results/zh_public_all9_full_20260422_r2
+STATE_DIR=/tmp/icefall-auto-eval/zh-full9-final-20260422-r2
+DATASETS=wenetspeech_test_meeting,wenetspeech_test_net,ALIMEETING_TEST_FAR_FIELD,ALIMEETING_TEST_NEAR_FIELD,thchs30_noise_white,thchs30_test,AISHELL1_TEST,thchs30_noise_car,thchs30_noise_cafe
+
+mkdir -p "${RESULTS_ROOT}"
+bash "${RECIPE}" \
+  --mode once \
+  --exp-dir "${EXP_DIR}" \
+  --artifact-root "${PUBLIC_ROOT}" \
+  --results-root "${RESULTS_ROOT}" \
+  --state-dir "${STATE_DIR}" \
+  --test-sets "${DATASETS}" \
+  --start-iter 80000 \
+  --avg 1 \
+  --decode-cuda-visible-devices 0,1
+'
+```

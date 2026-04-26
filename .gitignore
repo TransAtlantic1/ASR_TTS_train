@@ -1,0 +1,61 @@
+icefall.egg-info/
+data
+__pycache__
+path.sh
+exp
+exp*/
+*.pt
+download
+dask-worker-space
+log
+*.bak
+*-bak
+*bak.py
+
+# Ignore Mac system files
+.DS_store
+
+# Ignore node_modules folder
+node_modules
+
+# ignore .nfs
+
+.nfs*
+
+# Ignore all text files
+*.txt
+
+# Ignore files related to API keys
+.env
+
+# Ignore SASS config files
+.sass-cache
+
+*.param
+*.bin
+.DS_Store
+*.fst
+*.arpa
+/egs/emilia_24k_multilang/AGENTS.md
+*.log
+*.nohup.log
+host.nohup.log
+worker.*.nohup.log
+
+# Local / temporary Emilia artifacts
+/egs/emilia/ASR/logs/
+/egs/emilia/CLAUDE.md
+/egs/emilia_24k/ASR/run_public_partial_train_feature_probe.sh
+/egs/emilia_24k/*_report.md
+/egs/emilia_24k_multilang/report/*
+!/egs/emilia_24k_multilang/report/recipe/
+/egs/emilia_24k_multilang/report/recipe/*
+!/egs/emilia_24k_multilang/report/recipe/*.py
+/backup/
+/asr_op/*/backup/
+/test/**/logs/
+/test/**/outputs/
+/test/**/tmp/
+/test/**/.pytest_cache/
+/backup/runtime_dumps/
+core.*

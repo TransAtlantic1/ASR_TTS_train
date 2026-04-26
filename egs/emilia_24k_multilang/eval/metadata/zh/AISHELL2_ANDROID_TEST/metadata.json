@@ -1,0 +1,14 @@
+{
+  "dataset_id": "AISHELL2_ANDROID_TEST",
+  "language": "zh",
+  "difficulty": "medium",
+  "description": "AISHELL-2 Android test split.",
+  "source_url": "https://www.aishelltech.com/aishell_2",
+  "manual_download": true,
+  "prep_kind": "aishell2_eval",
+  "status": "blocked",
+  "bench_dataset_root": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/AISHELL2_ANDROID_TEST",
+  "expected_existing_cut_candidates": [],
+  "blocked_reason": "FileNotFoundError: AISHELL-2 manual data was not found under /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/downloads/aishell2",
+  "generated_at_utc": "2026-04-21T16:05:10.052688+00:00"
+}

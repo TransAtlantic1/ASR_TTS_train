@@ -1,0 +1,13 @@
+{
+  "dataset_id": "ALIMEETING_TEST_NEAR_FIELD",
+  "language": "zh",
+  "difficulty": "hard",
+  "description": "AliMeeting test near-field split.",
+  "source_url": "https://www.openslr.org/119",
+  "manual_download": false,
+  "prep_kind": "alimeeting_split",
+  "status": "prepared",
+  "bench_dataset_root": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/ALIMEETING_TEST_NEAR_FIELD",
+  "prepared_cut_path": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/ALIMEETING_TEST_NEAR_FIELD/fbank/ALIMEETING_TEST_NEAR_FIELD_cuts.jsonl.gz",
+  "generated_at_utc": "2026-04-22T03:41:00.756468+00:00"
+}

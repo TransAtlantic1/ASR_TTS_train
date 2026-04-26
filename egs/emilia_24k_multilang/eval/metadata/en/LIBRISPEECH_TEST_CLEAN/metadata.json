@@ -1,0 +1,13 @@
+{
+  "dataset_id": "LIBRISPEECH_TEST_CLEAN",
+  "language": "en",
+  "difficulty": "medium",
+  "description": "LibriSpeech test-clean split.",
+  "source_url": "https://www.openslr.org/12",
+  "manual_download": false,
+  "prep_kind": "librispeech_eval",
+  "status": "prepared",
+  "bench_dataset_root": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/LIBRISPEECH_TEST_CLEAN",
+  "prepared_cut_path": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/LIBRISPEECH_TEST_CLEAN/fbank/LIBRISPEECH_TEST_CLEAN_cuts.jsonl.gz",
+  "generated_at_utc": "2026-04-23T12:31:58.011136+00:00"
+}

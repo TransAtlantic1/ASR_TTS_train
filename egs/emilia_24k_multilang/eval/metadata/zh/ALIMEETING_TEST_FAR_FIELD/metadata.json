@@ -1,0 +1,13 @@
+{
+  "dataset_id": "ALIMEETING_TEST_FAR_FIELD",
+  "language": "zh",
+  "difficulty": "hard",
+  "description": "AliMeeting test far-field split.",
+  "source_url": "https://www.openslr.org/119",
+  "manual_download": false,
+  "prep_kind": "alimeeting_split",
+  "status": "prepared",
+  "bench_dataset_root": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/ALIMEETING_TEST_FAR_FIELD",
+  "prepared_cut_path": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/public/eval/ALIMEETING_TEST_FAR_FIELD/fbank/ALIMEETING_TEST_FAR_FIELD_cuts.jsonl.gz",
+  "generated_at_utc": "2026-04-22T03:41:00.756905+00:00"
+}
