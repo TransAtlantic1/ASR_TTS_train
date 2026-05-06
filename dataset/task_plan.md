@@ -14,18 +14,17 @@ Plan and implement a multi-language Jellycat workflow for:
 - README documentation for screening, VAD, reject, split, and context-audio fields
 - prefix/suffix annotated-audio context fields in total manifests and podcast manifests
 
-## Current Active Goal
+## Current Active Goal Status
 
-Apply the latest Jellycat production policy for ZH and EN: reject every segment
-with `duration >= 45s`, write non-colliding reject JSONLs, remove the rejected
-Jellycat FLACs only after explicit destructive-action approval, keep ids
-unchanged, and add reject-aware prefix/suffix context fields to the total
-segment manifest and podcast-level JSONLs without touching `raw_data` or
-stage0-6 outputs.
+Closed as deferred on 2026-05-06 after the user redirected the work to dataset
+workspace cleanup, commit, and push. The latest Jellycat production policy was
+implemented and dry-run, but production application was not executed because it
+requires explicit destructive-action approval before replacing manifests or
+deleting FLAC files.
 
 ## Current Phase
 
-Phase 3
+Closed
 
 ## Constraints
 
@@ -67,26 +66,26 @@ Phase 3
 - [x] Run full ZH/EN dry-runs and record counts.
 - **Status:** complete
 
-### Phase 3: Production Apply Decision
+### Phase 3: Production Apply Decision Deferred
 
-- [ ] Get explicit user approval before replacing manifests or deleting FLACs.
-- [ ] Confirm whether to apply manifests first without deletion, or apply with `--delete-audio`.
-- [ ] Confirm target paths for ZH and EN production outputs/backups.
-- **Status:** in_progress
+- [x] Recognize production apply requires explicit user approval before replacing manifests or deleting FLACs.
+- [x] Do not choose between manifest-only apply and `--delete-audio` without a new direct user instruction.
+- [x] Leave target path confirmation for a future production-apply task.
+- **Status:** complete
 
-### Phase 4: Production Apply And Verification
+### Phase 4: Production Apply And Verification Deferred
 
-- [ ] Run approved ZH/EN apply commands.
-- [ ] Verify reject JSONL line counts and summary counts.
-- [ ] Verify rewritten total/podcast manifests contain context fields and no rejected records.
-- [ ] Verify audio deletion status if deletion is approved.
-- **Status:** pending
+- [x] Do not run ZH/EN apply commands in this cleanup/commit task.
+- [x] Do not replace production manifests in this cleanup/commit task.
+- [x] Do not delete FLAC files in this cleanup/commit task.
+- [x] Document that verification remains part of a future production-apply task.
+- **Status:** complete
 
 ### Phase 5: Handoff
 
-- [ ] Update `progress.md` and `findings.md` with final commands/results.
-- [ ] Report files changed, checks run, destructive actions taken or skipped, and residual risks.
-- **Status:** pending
+- [x] Update `progress.md` with the deferred production-apply decision.
+- [x] Report that destructive actions were skipped and require explicit future approval.
+- **Status:** complete
 
 ## Initial Decisions
 
@@ -99,9 +98,9 @@ Phase 3
 
 ## Open Questions
 
-- Remaining: Should the duration>=45s policy be applied with manifest rewrites
+- Deferred: Should the duration>=45s policy be applied with manifest rewrites
   only first, or with `--delete-audio` in the same run?
-- Remaining: Confirm production target paths/backups for ZH and EN before
+- Deferred: Confirm production target paths/backups for ZH and EN before
   replacing JSONLs or deleting FLACs.
 
 ## Confirmed User Answers

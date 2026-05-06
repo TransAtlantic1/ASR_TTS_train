@@ -101,3 +101,11 @@
 - Re-read `task_plan.md`, `progress.md`, the planning checker, the planning template, and `Jellycat/prepare_data/apply_jellycat_duration45_reject_context.py`.
 - Updated `task_plan.md` with checker-compatible `### Phase` sections for the latest active duration>=45s production policy.
 - Current active phase is Phase 3: production apply decision. It is intentionally blocked on explicit user approval because applying with `--delete-audio` deletes FLAC files and replacing manifests modifies production data.
+- User redirected the active work to dataset workspace cleanup, moving VAD/ASR scripts to `backup_scripts`, keeping old planning files in place, committing, and pushing.
+- Cleanup task planning now lives under `clean/` and is complete.
+- Committed and pushed dataset cleanup changes to `origin/main`:
+  - `0c257b4 Organize Jellycat dataset cleanup`
+  - `1615b9e Mark dataset cleanup complete`
+- Stop hook then reported `2/5 phases done` because this old root `task_plan.md` still described deferred production apply phases.
+- Re-read `task_plan.md` and `clean/task_plan.md`; production apply remains intentionally not executed because it would replace manifests and may delete FLACs.
+- Updated this root `task_plan.md` to close the production-apply phases as deferred, not executed, so the old planning file no longer presents destructive production apply as in-progress work.
