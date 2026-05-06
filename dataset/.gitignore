@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Runtime-only Jellycat outputs.
+Jellycat/logs/
+
+# Local third-party checkout used during the superseded VAD/ASR exploration.
+Jellycat/prepare_data/external/

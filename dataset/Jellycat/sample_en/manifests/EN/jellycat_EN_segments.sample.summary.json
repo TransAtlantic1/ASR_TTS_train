@@ -1,0 +1,38 @@
+{
+  "status": "prepared",
+  "target_language": "EN",
+  "raw_root": "/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/raw_data",
+  "output_root": "/inspire/hdd/project/embodied-multimodality/chenxie-25019/fj/ASR_TTS_train/dataset/Jellycat/sample_en",
+  "segment_manifest": "/inspire/hdd/project/embodied-multimodality/chenxie-25019/fj/ASR_TTS_train/dataset/Jellycat/sample_en/manifests/EN/jellycat_EN_segments.sample.jsonl.gz",
+  "rejected_manifest": "/inspire/hdd/project/embodied-multimodality/chenxie-25019/fj/ASR_TTS_train/dataset/Jellycat/sample_en/manifests/EN/jellycat_EN_rejected.sample.jsonl.gz",
+  "lhotse_recordings": "/inspire/hdd/project/embodied-multimodality/chenxie-25019/fj/ASR_TTS_train/dataset/Jellycat/sample_en/manifests/EN/jellycat_EN_recordings.sample.jsonl.gz",
+  "lhotse_supervisions": "/inspire/hdd/project/embodied-multimodality/chenxie-25019/fj/ASR_TTS_train/dataset/Jellycat/sample_en/manifests/EN/jellycat_EN_supervisions.sample.jsonl.gz",
+  "sample_rate": 24000,
+  "audio_format": "flac",
+  "directory_layout": "EN/EN_P000000/EN_P000000_S00000/flac/EN_P000000_S00000_W00000000.flac",
+  "id_policy": "podcasts and episode-local speakers are assigned numeric IDs in source manifest order; source hashes stay in manifest metadata",
+  "speaker_policy": "episode-local source speaker ids are mapped to numeric S IDs under each numeric podcast",
+  "non_speech_policy": "pure bracket tags are rejected and written only to rejected_manifest",
+  "id_map_counts": {
+    "podcasts": 1,
+    "speakers": 2
+  },
+  "num_shards": 1,
+  "shard_index": 0,
+  "per_language_stats": {
+    "en-us": {
+      "lines_seen": 10,
+      "audio_written": 8,
+      "accepted": 8,
+      "accepted_duration_sec": 154.45000000000002,
+      "rejected_non_speech_tag": 2
+    }
+  },
+  "total_stats": {
+    "lines_seen": 10,
+    "audio_written": 8,
+    "accepted": 8,
+    "accepted_duration_sec": 154.45000000000002,
+    "rejected_non_speech_tag": 2
+  }
+}
