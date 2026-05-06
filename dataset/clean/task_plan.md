@@ -8,7 +8,7 @@ task-owned dataset changes, and push the commit to the remote branch.
 
 ## Current Phase
 
-Phase 4
+Phase 5
 
 ## Phases
 
@@ -36,16 +36,16 @@ Phase 4
 
 ### Phase 4: Commit And Push
 
-- [ ] Stage only task-owned dataset paths explicitly.
-- [ ] Commit with a short imperative subject.
-- [ ] Push the current branch to `origin`.
-- **Status:** in_progress
+- [x] Stage only task-owned dataset paths explicitly.
+- [x] Commit with a short imperative subject.
+- [x] Push the current branch to `origin`.
+- **Status:** complete
 
 ### Phase 5: Handoff
 
-- [ ] Record final commit hash and push result.
-- [ ] Report changed files, checks, and skipped or excluded paths.
-- **Status:** pending
+- [x] Record final commit hash and push result.
+- [x] Report files changed, checks run, and skipped or excluded paths.
+- **Status:** complete
 
 ## Key Questions
 
