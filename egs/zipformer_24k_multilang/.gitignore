@@ -1,0 +1,33 @@
+findings.md
+fingdings.md
+task_plan.md
+progress.md
+/plan/
+eval/sample/
+
+# Runtime and generated artifacts
+/wandb/
+/logs/
+/eval/result/
+core.*
+**/__pycache__/
+*.py[cod]
+*.log
+*.pid
+*.status
+*.exit_status
+*.nohup.log
+host.nohup.log
+worker.*.nohup.log
+
+# Generated reports; keep report recipes
+/report/*
+!/report/.gitignore
+!/report/recipe/
+!/report/recipe/*.py
+
+
+# Local operational planning/helper directories
+/explore_plan/
+/zipformer_24k_en/ASR/emilia24k_ops/
+/zipformer_24k_zh/ASR/emilia24k_ops/

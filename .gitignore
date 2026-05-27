@@ -59,3 +59,23 @@ worker.*.nohup.log
 /test/**/.pytest_cache/
 /backup/runtime_dumps/
 core.*
+
+# Local / temporary Zipformer 24k multilang artifacts
+/egs/zipformer_24k_multilang/wandb/
+/egs/zipformer_24k_multilang/logs/
+/egs/zipformer_24k_multilang/eval/result/
+/egs/zipformer_24k_multilang/core.*
+/egs/zipformer_24k_multilang/**/__pycache__/
+/egs/zipformer_24k_multilang/report/*
+!/egs/zipformer_24k_multilang/report/.gitignore
+!/egs/zipformer_24k_multilang/report/recipe/
+!/egs/zipformer_24k_multilang/report/recipe/*.py
+
+
+# Agent planning files
+findings.md
+progress.md
+task_plan.md
+**/findings.md
+**/progress.md
+**/task_plan.md
