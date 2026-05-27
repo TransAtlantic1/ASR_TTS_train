@@ -46,6 +46,12 @@ def open_text(path: Path, mode: str):
     return path.open(mode, encoding="utf-8")
 
 
+def temp_manifest_path(path: Path, policy_name: str) -> Path:
+    if path.name.endswith(".gz"):
+        return path.with_name(path.name[:-3] + f".{policy_name}.tmp.gz")
+    return path.with_name(path.name + f".{policy_name}.tmp")
+
+
 def iter_jsonl(path: Path) -> Iterator[dict]:
     with path.open("r", encoding="utf-8") as f:
         for line in f:
@@ -258,7 +264,7 @@ def main() -> None:
     manifest_backup = backup_root / args.manifest.name
     reject_output = args.reject_root / f"jellycat_{language}_{args.policy_name}.reject_long_audio.jsonl"
     summary_output = args.reject_root / f"jellycat_{language}_{args.policy_name}.summary.json"
-    manifest_tmp = args.manifest.with_name(args.manifest.name + f".{args.policy_name}.tmp")
+    manifest_tmp = temp_manifest_path(args.manifest, args.policy_name)
 
     stats = Counter()
     context_stats = Counter()

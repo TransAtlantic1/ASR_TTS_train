@@ -3,11 +3,13 @@
 set -euo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-REPO_ROOT=$(cd -- "${SCRIPT_DIR}/../../.." && pwd)
+JELLYCAT_ROOT=$(cd -- "${SCRIPT_DIR}/../.." && pwd)
+POLICY_DIR="${JELLYCAT_ROOT}/data_cleaning/manifest_policy_filter"
 
 OUTPUT_ROOT="${OUTPUT_ROOT:-/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat}"
-LOG_DIR="${LOG_DIR:-${REPO_ROOT}/dataset/Jellycat/logs}"
-README_OUTPUT="${README_OUTPUT:-${REPO_ROOT}/dataset/Jellycat/readme/Jellycat_EN_full_dataset_readme.md}"
+LOG_DIR="${LOG_DIR:-${JELLYCAT_ROOT}/logs}"
+REPORT_DIR="${REPORT_DIR:-${JELLYCAT_ROOT}/data_cleaning/raw_to_utterance/reports}"
+README_OUTPUT="${README_OUTPUT:-${REPORT_DIR}/Jellycat_EN_full_dataset_readme.md}"
 MANIFEST_STEM="${MANIFEST_STEM:-jellycat_EN_segments}"
 NUM_SHARDS="${NUM_SHARDS:-16}"
 SLEEP_SECONDS="${SLEEP_SECONDS:-60}"
@@ -66,7 +68,7 @@ python "${SCRIPT_DIR}/write_jellycat_podcast_manifests.py" \
   --progress-path "${LOG_DIR}/full_prepare_en_podcast_manifests.progress.json" \
   --overwrite
 
-python "${SCRIPT_DIR}/write_jellycat_full_readme.py" \
+python "${POLICY_DIR}/write_jellycat_full_readme.py" \
   --summary "${SUMMARY_PATH}" \
   --output "${README_OUTPUT}"
 

@@ -31,6 +31,11 @@ def get_args():
         default=None,
         help="可选 hard reject 分布审查 summary JSON。",
     )
+    parser.add_argument(
+        "--include-vad-policy",
+        action="store_true",
+        help="显式写入尚未 promote 的 VAD 二次清理策略说明。",
+    )
     return parser.parse_args()
 
 
@@ -159,13 +164,6 @@ def main() -> None:
         "directory_layout",
         f"{target_language}/{target_language}_P000000/{target_language}_P000000_S00000/flac/{target_language}_P000000_S00000_W00000000.flac",
     )
-    if directory_layout.endswith(".flac"):
-        vad_child_layout = f"{directory_layout[:-5]}_V0001.flac"
-    else:
-        vad_child_layout = (
-            f"{target_language}/{target_language}_P000000/{target_language}_P000000_S00000/flac/"
-            f"{target_language}_P000000_S00000_W00000000_V0001.flac"
-        )
     lines = [
         f"# Jellycat {target_language} 全量数据集说明",
         "",
@@ -177,19 +175,33 @@ def main() -> None:
         f"- Summary 文件数：`{summary_count}`",
         f"- Manifest 组织方式：`{'单文件合并版' if is_merged else f'{num_shards} 个 shard'}`",
     ]
-    lines.extend(
-        [
-            "## 长音频筛查与 VAD 切分规则",
-            "",
-            "- `duration <= 30s`：保留原 utterance 和原 FLAC 路径。",
-            "- `30s < duration <= 60s`：对已经切好的 utterance FLAC 做 VAD，按自然语音段切分。",
-            "- `duration > 60s`：直接写入二次清理 reject 清单，不再进入 VAD。",
-            "- VAD child 如果仍然 `duration > 30s`，该 child 写入二次清理 reject 清单。",
-            "- VAD child 的 id 和文件名保留原始 `W` stem，并追加 `_V0001`、`_V0002` 等后缀。",
-            "- 二次清理产物先写入版本化 manifest/audio 输出；验证通过后再决定是否 promote 到正式入口。",
-            "- 该流程只处理 Jellycat 已切分后的 manifests 和音频目录，不修改 `raw_data`。",
-            "",
-        ]
+    if args.include_vad_policy:
+        lines.extend(
+            [
+                "",
+                "## 长音频筛查与 VAD 切分规则",
+                "",
+                "- `duration <= 30s`：保留原 utterance 和原 FLAC 路径。",
+                "- `30s < duration <= 60s`：对已经切好的 utterance FLAC 做 VAD，按自然语音段切分。",
+                "- `duration > 60s`：直接写入二次清理 reject 清单，不再进入 VAD。",
+                "- VAD child 如果仍然 `duration > 30s`，该 child 写入二次清理 reject 清单。",
+                "- VAD child 的 id 和文件名保留原始 `W` stem，并追加 `_V0001`、`_V0002` 等后缀。",
+                "- 二次清理产物先写入版本化 manifest/audio 输出；验证通过后再决定是否 promote 到正式入口。",
+                "- 该流程只处理 Jellycat 已切分后的 manifests 和音频目录，不修改 `raw_data`。",
+                "",
+            ]
+        )
+
+    readme_command = (
+        f"python dataset/Jellycat/data_cleaning/manifest_policy_filter/write_jellycat_full_readme.py "
+        f"--summary /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/{target_language}/jellycat_{target_language}_segments.summary.json "
+    )
+    if args.reject_summary:
+        readme_command += (
+            f"--reject-summary /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/{target_language}/jellycat_{target_language}_reject_candidates.summary.json "
+        )
+    readme_command += (
+        f"--output dataset/Jellycat/data_cleaning/raw_to_utterance/reports/Jellycat_{target_language}_full_dataset_readme.md"
     )
 
     if is_merged:
@@ -201,14 +213,12 @@ def main() -> None:
         "## 音频目录结构",
         "",
         "```text",
-        f"{directory_layout}          # original utterance",
-        f"{vad_child_layout}    # optional VAD child from the same W",
+        directory_layout,
         "```",
         "",
         "- `P`：podcast 数字编号。",
         "- `S`：该 podcast 下按 episode-local speaker 映射后的数字编号。",
         "- `W`：utterance 数字编号。",
-        f"- VAD 拆分后的 child utterance 仍挂在原始 `W` 下，文件名和 id 增加 `_V0001`、`_V0002` 后缀，例如 `{target_language}_P000000_S00000_W00000000_V0001.flac`。",
         "- 原始哈希、原始 speaker、原始音频路径等信息保留在 segment manifest 元数据中。",
         "",
         "## 统计摘要",
@@ -295,18 +305,18 @@ def main() -> None:
                 f"- 平均时长：`{format_number(distribution.get('duration_mean_sec', 0.0))}` 秒；最大时长：`{format_number(distribution.get('duration_max_sec', 0.0))}` 秒。",
                 f"- 平均字符数：`{format_number(distribution.get('text_len_mean', 0.0))}`；平均 chars/sec：`{format_number(distribution.get('chars_per_sec_mean', 0.0))}`。",
                 "",
-                "当前 hard reject 清单用于 stage7 之后或其他后续步骤完成后再按 id 删除，避免中途改动已经开始处理的输入。",
+                "当前 hard reject 清单用于后续训练或清理步骤完成后再按 id 删除，避免中途改动已经开始处理的输入。",
                 "",
                 "生成命令：",
                 "",
                 "```bash",
-                f"python dataset/Jellycat/prepare_data/generate_jellycat_reject_list.py --language {target_language} --podcast-root /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/{target_language} --output-dir /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/{target_language} --duration-threshold 60 --chars-per-sec-threshold 1.0",
+                f"python dataset/Jellycat/data_cleaning/manifest_policy_filter/generate_jellycat_reject_list.py --language {target_language} --podcast-root /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/{target_language} --output-dir /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/{target_language} --duration-threshold 60 --chars-per-sec-threshold 1.0",
                 "```",
                 "",
                 "删除命令示例，reject 文件通过参数传入：",
                 "",
                 "```bash",
-                "python dataset/Jellycat/prepare_data/filter_jsonl_by_reject_list.py \\",
+                "python dataset/Jellycat/data_cleaning/manifest_policy_filter/filter_jsonl_by_reject_list.py \\",
                 f"  --reject-jsonl {reject_summary.get('strict_reject_jsonl')} \\",
                 "  --input /path/to/input.jsonl.gz \\",
                 "  --output /path/to/output.filtered.jsonl.gz",
@@ -347,10 +357,10 @@ def main() -> None:
             "## 复现命令",
             "",
             "```bash",
-            f"bash dataset/Jellycat/prepare_data/run_prepare_jellycat_{target_language.lower()}_shards.sh",
-            "python dataset/Jellycat/prepare_data/merge_jellycat_sharded_manifests.py",
-            f"python dataset/Jellycat/prepare_data/write_jellycat_podcast_manifests.py --segment-manifest /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/{target_language}/jellycat_{target_language}_segments.jsonl.gz --output-root /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat --language {target_language} --summary /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/{target_language}/jellycat_{target_language}_segments.summary.json --summary-output /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/{target_language}/jellycat_{target_language}_segments.podcast_manifests.summary.json",
-            f"python dataset/Jellycat/prepare_data/write_jellycat_full_readme.py --summary /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/{target_language}/jellycat_{target_language}_segments.summary.json --output dataset/Jellycat/readme/Jellycat_{target_language}_full_dataset_readme.md",
+            f"bash dataset/Jellycat/data_cleaning/raw_to_utterance/run_prepare_jellycat_{target_language.lower()}_shards.sh",
+            "python dataset/Jellycat/data_cleaning/raw_to_utterance/merge_jellycat_sharded_manifests.py",
+            f"python dataset/Jellycat/data_cleaning/raw_to_utterance/write_jellycat_podcast_manifests.py --segment-manifest /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/{target_language}/jellycat_{target_language}_segments.jsonl.gz --output-root /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat --language {target_language} --summary /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/{target_language}/jellycat_{target_language}_segments.summary.json --summary-output /inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/{target_language}/jellycat_{target_language}_segments.podcast_manifests.summary.json",
+            readme_command,
             "```",
         ]
     )

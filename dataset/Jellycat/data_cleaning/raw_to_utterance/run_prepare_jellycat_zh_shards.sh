@@ -3,12 +3,14 @@
 set -euo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-REPO_ROOT=$(cd -- "${SCRIPT_DIR}/../../.." && pwd)
+JELLYCAT_ROOT=$(cd -- "${SCRIPT_DIR}/../.." && pwd)
+POLICY_DIR="${JELLYCAT_ROOT}/data_cleaning/manifest_policy_filter"
 
 RAW_ROOT="${RAW_ROOT:-/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/raw_data}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat}"
-LOG_DIR="${LOG_DIR:-${REPO_ROOT}/dataset/Jellycat/logs}"
-README_OUTPUT="${README_OUTPUT:-${REPO_ROOT}/dataset/Jellycat/readme/Jellycat_ZH_full_dataset_readme.md}"
+LOG_DIR="${LOG_DIR:-${JELLYCAT_ROOT}/logs}"
+REPORT_DIR="${REPORT_DIR:-${JELLYCAT_ROOT}/data_cleaning/raw_to_utterance/reports}"
+README_OUTPUT="${README_OUTPUT:-${REPORT_DIR}/Jellycat_ZH_full_dataset_readme.md}"
 NUM_SHARDS="${NUM_SHARDS:-16}"
 MAX_PARALLEL="${MAX_PARALLEL:-16}"
 PROGRESS_INTERVAL_LINES="${PROGRESS_INTERVAL_LINES:-100000}"
@@ -77,7 +79,7 @@ if [ "${failed}" -eq 0 ]; then
     --summary-output "${OUTPUT_ROOT}/manifests/ZH/${MANIFEST_STEM}.podcast_manifests.summary.json" \
     --progress-path "${LOG_DIR}/full_prepare_podcast_manifests.progress.json" \
     --overwrite
-  python "${SCRIPT_DIR}/write_jellycat_full_readme.py" \
+  python "${POLICY_DIR}/write_jellycat_full_readme.py" \
     --summary "${OUTPUT_ROOT}/manifests/ZH/${MANIFEST_STEM}.summary.json" \
     --output "${README_OUTPUT}"
   echo "done" > "${LOG_DIR}/full_prepare_sharded.status"
