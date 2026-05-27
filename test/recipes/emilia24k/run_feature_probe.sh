@@ -6,7 +6,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 SCRIPT_SELF="${SCRIPT_DIR}/$(basename -- "${BASH_SOURCE[0]}")"
 ICEFALL_ROOT=$(cd -- "${SCRIPT_DIR}/../../.." && pwd)
 PARSE_OPTIONS_SH="${ICEFALL_ROOT}/icefall/shared/parse_options.sh"
-RECIPE_DIR="${ICEFALL_ROOT}/egs/emilia_24k_multilang/emilia_24k_ZH/ASR"
+RECIPE_DIR="${ICEFALL_ROOT}/egs/zipformer_24k_multilang/zipformer_24k_zh/ASR"
 VALIDATION_ROOT="$(cd -- "${ICEFALL_ROOT}/.." && pwd)/experiments/main_flow_validation/emilia24k"
 
 language=zh

@@ -7,7 +7,7 @@
 3. `run_decode_export.sh`
 4. `validate_outputs.py`
 
-默认只验证 `egs/emilia_24k_multilang/emilia_24k_ZH/ASR`，所有输入和产物都写到 `../experiments/main_flow_validation/emilia24k/`。
+默认只验证 `egs/zipformer_24k_multilang/zipformer_24k_zh/ASR`，所有输入和产物都写到 `../experiments/main_flow_validation/emilia24k/`。
 
 英文最小训练/验证循环使用独立隔离目录：
 

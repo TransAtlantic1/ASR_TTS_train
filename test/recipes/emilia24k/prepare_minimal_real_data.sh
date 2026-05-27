@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 ICEFALL_ROOT=$(cd -- "${SCRIPT_DIR}/../../.." && pwd)
-RECIPE_DIR="${ICEFALL_ROOT}/egs/emilia_24k_multilang/emilia_24k_ZH/ASR"
+RECIPE_DIR="${ICEFALL_ROOT}/egs/zipformer_24k_multilang/zipformer_24k_zh/ASR"
 VALIDATION_ROOT="$(cd -- "${ICEFALL_ROOT}/.." && pwd)/experiments/main_flow_validation/emilia24k"
 
 ARTIFACT_ROOT="${VALIDATION_ROOT}/workspace/artifacts"
