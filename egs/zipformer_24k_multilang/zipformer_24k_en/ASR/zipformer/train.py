@@ -1506,6 +1506,8 @@ def run(rank, world_size, args):
         register_inf_check_hooks(model)
 
     def remove_short_utt(c: Cut):
+        if c.duration < 0.5 or c.duration > 45.0:
+            return False
         # In ./zipformer.py, the conv module uses the following expression
         # for subsampling
         num_frames = c.num_frames
