@@ -8,10 +8,10 @@
 | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
 | raw_to_utterance | zh | `ZH`, `zh`, `zh-cn`, `zh-CN`, `zh-ch`, `zh-hans`, `zh-tw`, `zh-yue`, `zh-yue-hk` | `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/raw_data/manifest_{zh,zh-cn}.jsonl` | `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/ZH/jellycat_ZH_segments.jsonl.gz` | 27,932,297 | 115,101.10 | 26,697,838 | 111,230.13 | -3,870.97 | 0.9664 | `data_cleaning/raw_to_utterance/run_prepare_jellycat_zh_shards.sh` | Before values come from historical raw reports; after values come from `jellycat_ZH_segments.summary.json`. |
 | raw_to_utterance | en | `EN`, `en`, `en-us`, `en-US` | `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/raw_data/manifest_en-us.jsonl` | `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/EN/jellycat_EN_segments.jsonl.gz` | 26,424,704 | 90,780.10 | 25,066,601 | 86,406.45 | -4,373.65 | 0.9518 | `data_cleaning/raw_to_utterance/run_prepare_jellycat_en_shards.sh` | Before values come from historical raw reports; after values come from `jellycat_EN_segments.summary.json`. |
-| manifest_policy_filter | zh | `ZH`, `zh`, `zh-cn`, `zh-CN`, `zh-ch`, `zh-hans`, `zh-tw`, `zh-yue`, `zh-yue-hk` | `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/ZH/jellycat_ZH_segments.jsonl.gz` | same current `segments` entry plus reject sidecars under `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/ZH/` | 26,697,838 | 111,230.13 | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `data_cleaning/manifest_policy_filter/apply_jellycat_duration45_reject_context.py` | Verified by full read-only `zgrep`: no `duration >=45s` record remains in the current ZH `segments` manifest. Exact post-policy count/hours stay UNKNOWN because the summary JSON may not have been regenerated after policy application. |
-| manifest_policy_filter | en | `EN`, `en`, `en-us`, `en-US` | `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/EN/jellycat_EN_segments.jsonl.gz` | same current `segments` entry plus reject sidecars under `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/EN/` | 25,066,601 | 86,406.45 | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `data_cleaning/manifest_policy_filter/apply_jellycat_duration45_reject_context.py` | Verified by full read-only `zgrep`: no `duration >=45s` record remains in the current EN `segments` manifest. Exact post-policy count/hours stay UNKNOWN because the summary JSON may not have been regenerated after policy application. |
-| ASR_second | zh | `ZH`, `zh`, `zh-cn`, `zh-CN`, `zh-ch`, `zh-hans`, `zh-tw`, `zh-yue`, `zh-yue-hk` | `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/ZH/jellycat_ZH_segments.jsonl.gz` | smoke: `data_cleaning/ASR_second/smoke_outputs`; full template: `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/asr_hyp/qwen3_asr_1p7b` | 26,697,838 | 111,230.13 | 3 smoke records | UNKNOWN | UNKNOWN | UNKNOWN | `data_cleaning/ASR_second/verify_edit_data.py` | Full ASR is explicitly not run. 4090 smoke completed: 3/3 ZH records succeeded, mean pinyin-tone3 WER `0.21523493118177503`, mean CER `0.23206555349412492`. |
-| ASR_second | en | `EN`, `en`, `en-us`, `en-US` | `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/EN/jellycat_EN_segments.jsonl.gz` | smoke: `data_cleaning/ASR_second/smoke_outputs`; full template: `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/asr_hyp/qwen3_asr_1p7b` | 25,066,601 | 86,406.45 | 3 smoke records | UNKNOWN | UNKNOWN | UNKNOWN | `data_cleaning/ASR_second/verify_edit_data.py` | Full ASR is explicitly not run. 4090 smoke completed: 3/3 EN records succeeded, mean WER `0.04062229904926534`. |
+| manifest_policy_filter | zh | `ZH`, `zh`, `zh-cn`, `zh-CN`, `zh-ch`, `zh-hans`, `zh-tw`, `zh-yue`, `zh-yue-hk` | `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/ZH/jellycat_ZH_segments.jsonl.gz` | `data_cleaning/manifest_policy_filter/outputs/pending_merge/jellycat_segments_policy_v1.pending_merge.reject.jsonl` pending merge sidecar; source manifest unchanged | 26,694,858 | 111,076.45 | 26,304,883 | 110,026.23 | -1,050.22 | 0.9905 | `data_cleaning/manifest_policy_filter/build_jellycat_policy_rejects.py` | Candidate result if pending reject is merged: `<0.5s` 2,042 / 0.24h; `>45s` 0 / 0.00h; bracket-after-duration 387,933 / 1,049.98h. |
+| manifest_policy_filter | en | `EN`, `en`, `en-us`, `en-US` | `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/EN/jellycat_EN_segments.jsonl.gz` | `data_cleaning/manifest_policy_filter/outputs/pending_merge/jellycat_segments_policy_v1.pending_merge.reject.jsonl` pending merge sidecar; source manifest unchanged | 25,066,305 | 86,364.06 | 24,852,552 | 86,128.85 | -235.21 | 0.9973 | `data_cleaning/manifest_policy_filter/build_jellycat_policy_rejects.py` | Candidate result if pending reject is merged: `<0.5s` 78,083 / 9.83h; `>45s` 0 / 0.00h; bracket-after-duration 135,670 / 225.38h. |
+| ASR_second | zh | `ZH`, `zh`, `zh-cn`, `zh-CN`, `zh-ch`, `zh-hans`, `zh-tw`, `zh-yue`, `zh-yue-hk` | `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/ZH/jellycat_ZH_segments.jsonl.gz` | smoke: `data_cleaning/ASR_second/smoke_outputs`; full template: `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/asr_hyp/qwen3_asr_1p7b` | 26,694,858 | 111,076.45 | 3 smoke records | UNKNOWN | UNKNOWN | UNKNOWN | `data_cleaning/ASR_second/verify_edit_data.py` | Current manifest count/hours confirmed by the 2026-05-27 read-only policy scan. This task did not modify the manifest or start a full ASR run. 4090 smoke completed earlier: 3/3 ZH records succeeded, mean pinyin-tone3 WER `0.21523493118177503`, mean CER `0.23206555349412492`. |
+| ASR_second | en | `EN`, `en`, `en-us`, `en-US` | `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/manifests/EN/jellycat_EN_segments.jsonl.gz` | smoke: `data_cleaning/ASR_second/smoke_outputs`; full template: `/inspire/qb-ilm/project/embodied-multimodality/chenxie-25019/zhikang/Jellycat/asr_hyp/qwen3_asr_1p7b` | 25,066,305 | 86,364.06 | 3 smoke records | UNKNOWN | UNKNOWN | UNKNOWN | `data_cleaning/ASR_second/verify_edit_data.py` | Current manifest count/hours confirmed by the 2026-05-27 read-only policy scan. This task did not modify the manifest or start a full ASR run. 4090 smoke completed earlier: 3/3 EN records succeeded, mean WER `0.04062229904926534`. |
 
 ## Scope And Data Roots
 
@@ -42,7 +42,7 @@ Read-only data roots:
 
 ## raw_to_utterance
 
-Purpose: cut raw long-form podcast audio and raw manifests into utterance FLAC files, first-pass rejected manifests, segment manifests, Lhotse manifests, and per-podcast manifests.
+Purpose: cut raw long-form podcast audio and raw manifests into utterance FLAC files, segment manifests, Lhotse manifests, and per-podcast manifests. Content policy filtering now belongs to `manifest_policy_filter`; raw-to-utterance only rejects records that cannot be sliced or whose audio cut fails.
 
 Current scripts:
 
@@ -67,11 +67,13 @@ Legacy scripts are preserved under `data_cleaning/raw_to_utterance/legacy` pendi
 
 ## manifest_policy_filter
 
-Purpose: generate policy reject sidecars, filter JSONL by explicit reject ids, add context fields, apply duration policy, and generate language/full-readme summaries.
+Purpose: generate standalone policy reject sidecars, filter JSONL by explicit reject ids, recompute context fields after reject filtering, merge reject JSONLs manually, and generate language/full-readme summaries.
 
 Current scripts:
 
 ```text
+data_cleaning/manifest_policy_filter/build_jellycat_policy_rejects.py
+data_cleaning/manifest_policy_filter/merge_reject_jsonl.py
 data_cleaning/manifest_policy_filter/generate_jellycat_reject_list.py
 data_cleaning/manifest_policy_filter/filter_jsonl_by_reject_list.py
 data_cleaning/manifest_policy_filter/add_jellycat_context_fields.py
@@ -79,14 +81,29 @@ data_cleaning/manifest_policy_filter/apply_jellycat_duration45_reject_context.py
 data_cleaning/manifest_policy_filter/write_jellycat_full_readme.py
 ```
 
-Observed policy sidecars:
+Current pending policy reject sidecar generated on 2026-05-27 UTC:
+
+```text
+data_cleaning/manifest_policy_filter/outputs/pending_merge/jellycat_segments_policy_v1.pending_merge.reject.jsonl
+data_cleaning/manifest_policy_filter/outputs/pending_merge/jellycat_segments_policy_v1.pending_merge.summary.json
+```
+
+This is a standalone pending-merge reject list. It did not overwrite or rewrite the current EN/ZH `segments` manifests used by `ASR_second/test/h200_run_full_serial_nohup.sh`.
+
+`merge_reject_jsonl.py` can now also synchronize podcast-level manifests when called with `--language`, `--podcast-root`, and `--output-podcast-root`; it writes filtered podcast JSONLs with recomputed context and can optionally write a matching merged segment manifest with `--segment-output`. It can also filter Lhotse CutSet JSONL.GZ files with paired `--cut-input` / `--cut-output` arguments; cuts are rejected when `cut.id`, `recording.id`, or any `supervisions[].id/recording_id` matches the merged reject ids.
+
+| Language | Input records | Input hours | `<0.5s` records/hours | `>45s` records/hours | Bracket-after-duration records/hours | Pending reject records/hours | Candidate kept records/hours |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| EN | 25,066,305 | 86,364.06 | 78,083 / 9.83h | 0 / 0.00h | 135,670 / 225.38h | 213,753 / 235.21h | 24,852,552 / 86,128.85h |
+| ZH | 26,694,858 | 111,076.45 | 2,042 / 0.24h | 0 / 0.00h | 387,933 / 1,049.98h | 389,975 / 1,050.22h | 26,304,883 / 110,026.23h |
+| Total | 51,761,163 | 197,440.51 | 80,125 / 10.07h | 0 / 0.00h | 523,603 / 1,275.36h | 603,728 / 1,285.43h | 51,157,435 / 196,155.08h |
+
+Previous exploratory duration sidecars:
 
 | Language | Broad sidecar | Broad count | Strict sidecar | Strict count |
 | --- | --- | ---: | --- | ---: |
 | ZH | `jellycat_ZH_reject_candidates.duration_gt_60s.jsonl` | 1,787 | `jellycat_ZH_reject_candidates.duration_gt_60s.chars_per_sec_lt_1p0.jsonl` | 1,112 |
 | EN | `jellycat_EN_reject_candidates.duration_gt_60s.jsonl` | 239 | `jellycat_EN_reject_candidates.duration_gt_60s.chars_per_sec_lt_1p0.jsonl` | 80 |
-
-This pass does not generate final filter candidates and does not overwrite any official manifest.
 
 ## ASR_second
 
@@ -174,7 +191,7 @@ Allowed analysis subdirectories are only `raw_to_utterance`, `manifest_policy_fi
 - `verify_edit_data.py` now supports `.jsonl` / `.jsonl.gz` manifest input, `--audio_root`, `--dry-run`, `--limit`, `--timeout`, `--max-retries`, `--ports`, `--workers-per-port`, sidecar `--output`, and `--failed-output`.
 - The first Prompt 3 pass incorrectly read like the smoke was complete; it had only completed preflight and found missing dependencies. After the explicit install request, the real 4090 smoke completed successfully.
 - `qwen-asr[vllm]` installation changed `meanaudio2` by upgrading key packages including `torch==2.9.1+cu128`, `transformers==4.57.6`, and `vllm==0.14.0`; keep this in mind before using that environment for unrelated runs.
-- The provided ASR input paths are named `segments`; full read-only `zgrep` verification found no `duration >=45s` records in the current ZH/EN segment manifests, so they can be treated as duration-policy-filtered current ASR inputs. Exact post-policy row/hour totals remain UNKNOWN unless regenerated from the current manifests.
+- The provided ASR input paths are named `segments`. The 2026-05-27 pending policy scan found `0` records with `duration >45s`, `80,125` records / `10.07h` with `duration <0.5s`, and `523,603` records / `1,275.36h` with bracket spans after duration filtering. The scan generated only a pending reject sidecar; it did not modify the current ASR manifests.
 
 ## Reproducibility Commands
 

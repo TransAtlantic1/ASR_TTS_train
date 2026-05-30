@@ -13,29 +13,55 @@ def get_args() -> argparse.Namespace:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description=(
             "Add nearest prefix/suffix annotated-audio context fields to "
-            "Jellycat podcast-level JSONLs and optionally write a merged "
-            "segment manifest."
+            "Jellycat JSONLs. It can enrich podcast-level JSONLs or recompute "
+            "context after applying a reject JSONL."
         ),
     )
     parser.add_argument("--language", required=True, help="Target language, e.g. ZH.")
     parser.add_argument(
         "--podcast-root",
         type=Path,
-        required=True,
+        default=None,
         help="Input language root containing <LANG>_P*.jsonl podcast manifests.",
     )
     parser.add_argument(
         "--output-podcast-root",
         type=Path,
-        required=True,
+        default=None,
         help="Output language root for enriched podcast manifests.",
     )
     parser.add_argument(
         "--segment-output",
         type=Path,
         default=None,
-        help="Optional merged segment JSONL/JSONL.GZ output path.",
+        help="Optional merged segment JSONL/JSONL.GZ output path for podcast mode.",
     )
+    parser.add_argument(
+        "--input-jsonl",
+        type=Path,
+        default=None,
+        help="Optional source or annotation JSONL/JSONL.GZ to enrich directly.",
+    )
+    parser.add_argument(
+        "--reject-jsonl",
+        type=Path,
+        default=None,
+        help="Reject JSONL/JSONL.GZ whose ids are removed before context is recomputed.",
+    )
+    parser.add_argument(
+        "--context-jsonl",
+        type=Path,
+        default=None,
+        help="Original segment JSONL/JSONL.GZ that provides source timing when input-jsonl is an annotation output.",
+    )
+    parser.add_argument(
+        "--output-jsonl",
+        type=Path,
+        default=None,
+        help="Output JSONL/JSONL.GZ for direct source JSONL mode.",
+    )
+    parser.add_argument("--id-field", default="id")
+    parser.add_argument("--reject-id-field", default="id")
     parser.add_argument(
         "--far-threshold-sec",
         type=float,
@@ -51,19 +77,19 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help="Allow overwriting existing output podcast JSONLs and segment output.",
+        help="Allow overwriting existing outputs.",
     )
     return parser.parse_args()
 
 
 def open_text(path: Path, mode: str):
-    if path.suffix == ".gz":
+    if path.name.endswith(".gz"):
         return gzip.open(path, mode, encoding="utf-8")
     return path.open(mode, encoding="utf-8")
 
 
 def iter_jsonl(path: Path) -> Iterator[dict]:
-    with path.open("r", encoding="utf-8") as f:
+    with open_text(path, "rt") as f:
         for line in f:
             if line.strip():
                 yield json.loads(line)
@@ -74,11 +100,63 @@ def write_jsonl(path: Path, records: Iterable[dict], overwrite: bool) -> int:
         raise FileExistsError(f"{path} exists; pass --overwrite")
     path.parent.mkdir(parents=True, exist_ok=True)
     count = 0
-    with path.open("w", encoding="utf-8") as f:
+    with open_text(path, "wt") as f:
         for record in records:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
             count += 1
     return count
+
+
+def load_reject_ids(path: Optional[Path], id_field: str) -> set[str]:
+    if path is None:
+        return set()
+    return {str(record[id_field]) for record in iter_jsonl(path)}
+
+
+SOURCE_FIELDS = {
+    "id",
+    "wav",
+    "text",
+    "duration",
+    "sampling_rate",
+    "num_samples",
+    "language",
+    "source_language",
+    "podcast",
+    "speaker",
+    "source_manifest_id",
+    "source_podcast_hash",
+    "source_episode_hash",
+    "source_speaker",
+    "source_wav",
+    "source_start_time",
+    "source_end_time",
+    "source_duration",
+}
+
+
+def load_records_by_id(path: Path, id_field: str) -> dict[str, dict]:
+    return {str(record[id_field]): record for record in iter_jsonl(path)}
+
+
+def merge_source_and_annotation(source: dict, annotation: dict) -> dict:
+    output = dict(source)
+    output.update(annotation)
+    for key in SOURCE_FIELDS:
+        if key in source:
+            output[key] = source[key]
+    return output
+
+
+def load_context_records(args: argparse.Namespace, reject_ids: set[str]) -> List[dict]:
+    annotations = load_records_by_id(args.input_jsonl, args.id_field)
+    records = []
+    for source in iter_jsonl(args.context_jsonl):
+        record_id = str(source[args.id_field])
+        if record_id in reject_ids or record_id not in annotations:
+            continue
+        records.append(merge_source_and_annotation(source, annotations[record_id]))
+    return records
 
 
 def source_episode_key(record: dict) -> str:
@@ -94,6 +172,9 @@ def source_episode_key(record: dict) -> str:
 def time_bounds(record: dict) -> Tuple[float, float]:
     if record.get("source_start_time") is not None and record.get("source_end_time") is not None:
         return float(record["source_start_time"]), float(record["source_end_time"])
+    if record.get("start") is not None:
+        start = float(record["start"])
+        return start, start + float(record["duration"])
     start = 0.0
     return start, start + float(record["duration"])
 
@@ -102,7 +183,7 @@ def context_object(record: Optional[dict]) -> Optional[dict]:
     if record is None:
         return None
     start, end = time_bounds(record)
-    return {
+    output = {
         "id": record.get("id"),
         "wav": record.get("wav"),
         "start_time": start,
@@ -111,6 +192,10 @@ def context_object(record: Optional[dict]) -> Optional[dict]:
         "speaker": record.get("speaker"),
         "text": record.get("text", ""),
     }
+    for key in ("hyp_text", "wer", "cer", "ref_text", "edit_distance"):
+        if key in record:
+            output[key] = record[key]
+    return output
 
 
 def add_context_to_group(
@@ -178,9 +263,29 @@ def add_language_prefix(record: dict, language: str) -> dict:
     return output
 
 
-def main() -> None:
-    args = get_args()
-    language = args.language.upper()
+def run_jsonl_mode(args: argparse.Namespace, language: str) -> None:
+    if args.output_jsonl is None:
+        raise ValueError("--input-jsonl requires --output-jsonl")
+    if args.output_jsonl.exists() and not args.overwrite:
+        raise FileExistsError(f"{args.output_jsonl} exists; pass --overwrite")
+
+    reject_ids = load_reject_ids(args.reject_jsonl, args.reject_id_field)
+    if args.context_jsonl is None:
+        records = [record for record in iter_jsonl(args.input_jsonl) if str(record[args.id_field]) not in reject_ids]
+    else:
+        records = load_context_records(args, reject_ids)
+    enriched = add_context(records, args.far_threshold_sec)
+    written = write_jsonl(args.output_jsonl, enriched, overwrite=args.overwrite)
+    print(f"input_jsonl\t{args.input_jsonl}")
+    print(f"reject_jsonl\t{args.reject_jsonl}")
+    print(f"reject_ids\t{len(reject_ids)}")
+    print(f"records_written\t{written}")
+    print(f"output_jsonl\t{args.output_jsonl}")
+
+
+def run_podcast_mode(args: argparse.Namespace, language: str) -> None:
+    if args.podcast_root is None or args.output_podcast_root is None:
+        raise ValueError("podcast mode requires --podcast-root and --output-podcast-root")
     if not args.podcast_root.is_dir():
         raise FileNotFoundError(args.podcast_root)
     if args.segment_output and args.segment_output.exists() and not args.overwrite:
@@ -228,6 +333,15 @@ def main() -> None:
     print(f"output_podcast_root\t{args.output_podcast_root}")
     if args.segment_output is not None:
         print(f"segment_output\t{args.segment_output}")
+
+
+def main() -> None:
+    args = get_args()
+    language = args.language.upper()
+    if args.input_jsonl is not None:
+        run_jsonl_mode(args, language)
+    else:
+        run_podcast_mode(args, language)
 
 
 if __name__ == "__main__":

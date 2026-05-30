@@ -54,8 +54,6 @@ def main() -> None:
         stats[f"source_language_{record['source_language']}"] += 1
         if record["language"] != "ZH":
             raise AssertionError(f"unexpected language: {record}")
-        if record["text"].strip().startswith("[") and record["text"].strip().endswith("]"):
-            raise AssertionError(f"pure tag leaked into speech manifest: {record}")
         wav_path = args.sample_root / record["wav"]
         if not wav_path.is_file():
             raise FileNotFoundError(wav_path)
@@ -90,8 +88,6 @@ def main() -> None:
                 raise AssertionError(f"missing source metadata {key}: {record}")
 
     rejected = list(read_jsonl_gz(rejected_manifest))
-    if not rejected:
-        raise AssertionError("rejected manifest is empty; expected non-speech tags in sample")
 
     recordings = list(RecordingSet.from_file(recordings_manifest))
     supervisions = list(SupervisionSet.from_file(supervisions_manifest))

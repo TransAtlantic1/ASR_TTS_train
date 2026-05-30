@@ -22,7 +22,6 @@ DEFAULT_OUTPUT_ROOT = Path(
 )
 SAMPLE_RATE = 24000
 TARGET_LANGUAGE = "ZH"
-PURE_TAG_RE = re.compile(r"^(?:\[[^\[\]]+\]\s*)+$")
 MAX_PODCAST_ID = 999999
 MAX_SPEAKER_ID = 99999
 MAX_UTTERANCE_ID = 99999999
@@ -143,10 +142,6 @@ def sanitize_component(value: str) -> str:
     value = re.sub(r"[^A-Za-z0-9._-]+", "_", value)
     value = value.strip("._-")
     return value or "unknown"
-
-
-def is_non_speech_tag(text: str) -> bool:
-    return bool(PURE_TAG_RE.fullmatch(text.strip()))
 
 
 def source_manifest_path(raw_root: Path, language: str) -> Path:
@@ -509,8 +504,6 @@ def validate_entry(entry: Dict, source_language: str, raw_root: Path) -> Tuple[O
     if not source_rel:
         return "missing_wav", None
     source_wav = raw_root / source_language / str(source_rel)
-    if is_non_speech_tag(text):
-        return "non_speech_tag", source_wav
     if not source_wav.is_file():
         return "missing_source_wav", source_wav
     try:
@@ -747,7 +740,7 @@ def write_summary(
         ),
         "id_policy": "podcasts and episode-local speakers are assigned numeric IDs in source manifest order; source hashes stay in manifest metadata",
         "speaker_policy": "episode-local source speaker ids are mapped to numeric S IDs under each numeric podcast",
-        "non_speech_policy": "pure bracket tags are rejected and written only to rejected_manifest",
+        "policy_filtering": "content policy filtering is handled by manifest_policy_filter; raw_to_utterance only rejects records that cannot be sliced",
         "id_map_counts": {
             "podcasts": len(args.id_maps["podcasts"]),
             "speakers": len(args.id_maps["speakers"]),
