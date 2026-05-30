@@ -34,17 +34,20 @@
 
 ## Long Task Planning
 
-- For long-running, multi-step, research-heavy, or ambiguous tasks, use the
-  `planning-with-files` skill automatically before execution.
+- Use the `planning-with-files` skill only when the user explicitly asks for
+  file-based planning, invokes the skill by name, or starts a new conversation
+  specifically to continue an existing plan.
 - See `skill/planning.md` for the local usage note.
-- Treat tasks that are likely to require 5 or more tool calls, multiple phases,
-  session recovery, or substantial discovery as long tasks.
-- Create and maintain `task_plan.md`, `findings.md`, and `progress.md` in the
-  project root according to the skill workflow.
-- Re-read the plan before major decisions, update progress after each phase,
-  and log errors or failed attempts so the same failure is not repeated.
-- If it is unclear whether a task should use the planning workflow, ask the
-  user before deciding.
+- Do not auto-create, auto-continue, or auto-update `task_plan.md`,
+  `findings.md`, or `progress.md` solely because a task is long-running,
+  multi-step, research-heavy, ambiguous, or likely to require 5 or more tool
+  calls.
+- When the user explicitly opts into the planning workflow, create and maintain
+  the planning files according to the skill workflow, re-read the plan before
+  major decisions, update progress after each phase, and log errors or failed
+  attempts so the same failure is not repeated.
+- If it is unclear whether the user wants the planning workflow, ask before
+  using it.
 
 ## Matt Pocock Skills
 
