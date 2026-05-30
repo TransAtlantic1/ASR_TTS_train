@@ -3,6 +3,7 @@ data_cleaning/ASR_second/smoke_outputs/
 data_cleaning/ASR_second/logs/
 data_cleaning/ASR_second/qwen_asr_logs/
 data_cleaning/ASR_second/test/runs/
+data_cleaning/ASR_second/test/splits/
 __pycache__/
 .ipynb_checkpoints/
 *.pid

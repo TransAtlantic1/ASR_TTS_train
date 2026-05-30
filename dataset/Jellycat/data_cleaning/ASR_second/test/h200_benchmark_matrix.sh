@@ -17,12 +17,6 @@ fi
 : "${MAX_RETRIES:=2}"
 : "${INCLUDE_EDITS:=1}"
 
-port_count=$(python3 - "${PORTS}" <<'PY'
-import sys
-ports = [p for p in sys.argv[1].replace(",", " ").split() if p]
-print(len(ports))
-PY
-)
 
 echo "run_dir=${RUN_DIR}"
 echo "ports=${PORTS}"
@@ -31,15 +25,13 @@ echo "workers_per_port_list=${WORKERS_PER_PORT_LIST}"
 
 for limit in ${LIMITS}; do
   for wpp in ${WORKERS_PER_PORT_LIST}; do
-    max_inflight=$((port_count * wpp * 4))
     label="limit${limit}_wpp${wpp}"
-    echo "== Matrix item ${label} max_inflight=${max_inflight} =="
+    echo "== Matrix item ${label} =="
     RUN_DIR="${RUN_DIR}" \
     PORTS="${PORTS}" \
     LIMIT="${limit}" \
     LANGS="${LANGS}" \
     WORKERS_PER_PORT="${wpp}" \
-    MAX_INFLIGHT="${max_inflight}" \
     TIMEOUT="${TIMEOUT}" \
     MAX_RETRIES="${MAX_RETRIES}" \
     INCLUDE_EDITS="${INCLUDE_EDITS}" \

@@ -45,7 +45,6 @@ def summarize_file(path: Path) -> Dict[str, Any]:
         "language": timing.get("language") or infer_language(path),
         "limit": timing.get("limit"),
         "workers_per_port": timing.get("workers_per_port"),
-        "max_inflight": timing.get("max_inflight"),
         "ports": timing.get("ports"),
         "rows": len(rows),
         "failed": len(failed),
@@ -82,8 +81,8 @@ def write_markdown(rows: List[Dict[str, Any]], path: Path) -> None:
     lines = [
         "# H200 ASR Benchmark Summary",
         "",
-        "| file | lang | limit | wpp | max_inflight | rows | failed | wall_sec | utt_per_sec | audio_hours_per_wall_hour | mean_wer | mean_cer |",
-        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| file | lang | limit | wpp | rows | failed | wall_sec | utt_per_sec | audio_hours_per_wall_hour | mean_wer | mean_cer |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in rows:
         file_name = Path(row["file"]).name
@@ -95,7 +94,6 @@ def write_markdown(rows: List[Dict[str, Any]], path: Path) -> None:
                     fmt(row["language"]),
                     fmt(row["limit"]),
                     fmt(row["workers_per_port"]),
-                    fmt(row["max_inflight"]),
                     fmt(row["rows"]),
                     fmt(row["failed"]),
                     fmt(row["wall_sec"]),

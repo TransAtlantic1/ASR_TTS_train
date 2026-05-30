@@ -11,7 +11,8 @@ ASR_DIR=$(cd "${SCRIPT_DIR}/.." && pwd)
 : "${ZH_MANIFEST:=${AUDIO_ROOT}/manifests/ZH/jellycat_ZH_segments.jsonl.gz}"
 : "${PORTS:=8000,8001,8002,8003,8004,8005,8006,8007}"
 : "${WORKERS_PER_PORT:=24}"
-: "${MAX_INFLIGHT:=768}"
+: "${DURATION_SORT_BUFFER:=10000}"
+: "${LOAD_LOG_INTERVAL:=60}"
 : "${TIMEOUT:=600}"
 : "${MAX_RETRIES:=2}"
 : "${INCLUDE_EDITS:=1}"
@@ -21,7 +22,7 @@ ASR_DIR=$(cd "${SCRIPT_DIR}/.." && pwd)
 : "${FULL_RUN_DIR:=${SCRIPT_DIR}/runs/full_${RUN_ID}}"
 
 export ASR_ENV AUDIO_ROOT HYP_OUTPUT_ROOT EN_MANIFEST ZH_MANIFEST
-export PORTS WORKERS_PER_PORT MAX_INFLIGHT TIMEOUT MAX_RETRIES INCLUDE_EDITS
+export PORTS WORKERS_PER_PORT DURATION_SORT_BUFFER LOAD_LOG_INTERVAL TIMEOUT MAX_RETRIES INCLUDE_EDITS
 export RUN_FAILED_RETRY LANG_ORDER RUN_ID FULL_RUN_DIR
 
 mkdir -p "${FULL_RUN_DIR}/logs" "${FULL_RUN_DIR}/status" "${FULL_RUN_DIR}/manifests" "${HYP_OUTPUT_ROOT}"
@@ -39,7 +40,8 @@ export AUDIO_ROOT="${AUDIO_ROOT}"
 export HYP_OUTPUT_ROOT="${HYP_OUTPUT_ROOT}"
 export PORTS="${PORTS}"
 export WORKERS_PER_PORT="${WORKERS_PER_PORT}"
-export MAX_INFLIGHT="${MAX_INFLIGHT}"
+export DURATION_SORT_BUFFER="${DURATION_SORT_BUFFER}"
+export LOAD_LOG_INTERVAL="${LOAD_LOG_INTERVAL}"
 export TIMEOUT="${TIMEOUT}"
 export MAX_RETRIES="${MAX_RETRIES}"
 export INCLUDE_EDITS="${INCLUDE_EDITS}"
@@ -191,7 +193,8 @@ run_lang() {
       --audio_root "${AUDIO_ROOT}" \
       --ports "${PORTS}" \
       --workers-per-port "${WORKERS_PER_PORT}" \
-      --max-inflight "${MAX_INFLIGHT}" \
+      --duration-sort-buffer "${DURATION_SORT_BUFFER}" \
+      --load-log-interval "${LOAD_LOG_INTERVAL}" \
       --timeout "${TIMEOUT}" \
       --max-retries "${MAX_RETRIES}" \
       --output "${output}" \
@@ -236,7 +239,8 @@ run_lang() {
         --duration-field duration \
         --ports "${PORTS}" \
         --workers-per-port "${WORKERS_PER_PORT}" \
-        --max-inflight "${MAX_INFLIGHT}" \
+        --duration-sort-buffer "${DURATION_SORT_BUFFER}" \
+        --load-log-interval "${LOAD_LOG_INTERVAL}" \
         --timeout "${TIMEOUT}" \
         --max-retries "${MAX_RETRIES}" \
         --output "${retry_output}" \
@@ -264,7 +268,8 @@ echo "run_dir=${FULL_RUN_DIR}"
 echo "asr_env=${ASR_ENV}"
 echo "ports=${PORTS}"
 echo "workers_per_port=${WORKERS_PER_PORT}"
-echo "max_inflight=${MAX_INFLIGHT}"
+echo "duration_sort_buffer=${DURATION_SORT_BUFFER}"
+echo "load_log_interval=${LOAD_LOG_INTERVAL}"
 echo "run_failed_retry=${RUN_FAILED_RETRY}"
 echo "lang_order=${LANG_ORDER}"
 echo "hyp_output_root=${HYP_OUTPUT_ROOT}"

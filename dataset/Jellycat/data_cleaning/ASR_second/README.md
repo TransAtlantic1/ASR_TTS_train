@@ -150,7 +150,6 @@ conda run -n meanaudio2 python data_cleaning/ASR_second/verify_edit_data.py \
   --workers-per-port 1 \
   --timeout 600 \
   --max-retries 1 \
-  --max-inflight 2 \
   --output data_cleaning/ASR_second/smoke_outputs/qwen3_asr_1p7b_smoke.jsonl \
   --failed-output data_cleaning/ASR_second/smoke_outputs/failed.jsonl
 
@@ -162,7 +161,6 @@ conda run -n meanaudio2 python data_cleaning/ASR_second/verify_edit_data.py \
   --workers-per-port 1 \
   --timeout 600 \
   --max-retries 1 \
-  --max-inflight 2 \
   --output data_cleaning/ASR_second/smoke_outputs/qwen3_asr_1p7b_smoke.jsonl \
   --failed-output data_cleaning/ASR_second/smoke_outputs/failed.jsonl
 ```
@@ -224,7 +222,6 @@ python data_cleaning/ASR_second/verify_edit_data.py \
   --workers-per-port 1 \
   --timeout 300 \
   --max-retries 3 \
-  --max-inflight 8 \
   --output "$HYP_OUTPUT_ROOT/qwen3_asr_1p7b.sidecar.jsonl" \
   --failed-output "$FAILED_OUTPUT_PATH"
 ```

@@ -12,6 +12,8 @@ WORKSPACE_ROOT=$(cd "${ASR_DIR}/../.." && pwd)
 : "${GPU_MEMORY_UTILIZATION:=0.85}"
 : "${TENSOR_PARALLEL_SIZE:=1}"
 : "${MAX_MODEL_LEN:=4096}"
+: "${MAX_NUM_SEQS:=}"
+: "${MAX_NUM_BATCHED_TOKENS:=}"
 : "${HOST:=127.0.0.1}"
 : "${READY_TIMEOUT:=1800}"
 : "${RUN_ID:=$(date -u '+%Y%m%d-%H%M%S')}"
@@ -86,6 +88,8 @@ export PORTS="${PORTS}"
 export GPU_MEMORY_UTILIZATION="${GPU_MEMORY_UTILIZATION}"
 export TENSOR_PARALLEL_SIZE="${TENSOR_PARALLEL_SIZE}"
 export MAX_MODEL_LEN="${MAX_MODEL_LEN}"
+export MAX_NUM_SEQS="${MAX_NUM_SEQS}"
+export MAX_NUM_BATCHED_TOKENS="${MAX_NUM_BATCHED_TOKENS}"
 export HOST="${HOST}"
 export CACHE_ROOT="${CACHE_ROOT}"
 export VLLM_DISABLE_COMPILE_CACHE="${VLLM_DISABLE_COMPILE_CACHE}"
@@ -98,6 +102,16 @@ EOF
 echo "Starting ${#GPU_LIST[@]} Qwen3-ASR replicas"
 echo "run_dir=${RUN_DIR}"
 echo "model=${MODEL_PATH}"
+echo "max_num_seqs=${MAX_NUM_SEQS:-<default>}"
+echo "max_num_batched_tokens=${MAX_NUM_BATCHED_TOKENS:-<default>}"
+
+vllm_scheduler_args=()
+if [[ -n "${MAX_NUM_SEQS}" ]]; then
+  vllm_scheduler_args+=(--max-num-seqs "${MAX_NUM_SEQS}")
+fi
+if [[ -n "${MAX_NUM_BATCHED_TOKENS}" ]]; then
+  vllm_scheduler_args+=(--max-num-batched-tokens "${MAX_NUM_BATCHED_TOKENS}")
+fi
 
 for i in "${!GPU_LIST[@]}"; do
   gpu="${GPU_LIST[$i]}"
@@ -119,6 +133,7 @@ for i in "${!GPU_LIST[@]}"; do
       --port "${port}" \
       --tensor-parallel-size "${TENSOR_PARALLEL_SIZE}" \
       --max-model-len "${MAX_MODEL_LEN}" \
+      "${vllm_scheduler_args[@]}" \
       > "${log_file}" 2>&1 &
   pid=$!
   echo -e "${gpu}\t${port}\t${pid}\t${log_file}" >> "${RUN_DIR}/service_pids.tsv"

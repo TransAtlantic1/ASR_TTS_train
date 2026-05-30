@@ -18,7 +18,6 @@ fi
 : "${LIMIT:=100}"
 : "${LANGS:=ZH EN}"
 : "${WORKERS_PER_PORT:=1}"
-: "${MAX_INFLIGHT:=32}"
 : "${TIMEOUT:=600}"
 : "${MAX_RETRIES:=2}"
 : "${INCLUDE_EDITS:=1}"
@@ -50,7 +49,6 @@ echo "label=${LABEL}"
 echo "ports=${PORTS}"
 echo "limit=${LIMIT}"
 echo "workers_per_port=${WORKERS_PER_PORT}"
-echo "max_inflight=${MAX_INFLIGHT}"
 
 for lang in ${LANGS}; do
   manifest=$(manifest_for_lang "${lang}")
@@ -74,25 +72,23 @@ for lang in ${LANGS}; do
     --workers-per-port "${WORKERS_PER_PORT}" \
     --timeout "${TIMEOUT}" \
     --max-retries "${MAX_RETRIES}" \
-    --max-inflight "${MAX_INFLIGHT}" \
     --output "${out}" \
     --failed-output "${failed}" \
     "${EDIT_ARGS[@]}"
   end_ns=$(date +%s%N)
 
-  python3 - "${timing}" "${lang}" "${LIMIT}" "${WORKERS_PER_PORT}" "${MAX_INFLIGHT}" \
+  python3 - "${timing}" "${lang}" "${LIMIT}" "${WORKERS_PER_PORT}" \
     "${start_ns}" "${end_ns}" "${out}" "${failed}" "${PORTS}" <<'PY'
 import json
 import sys
 
-timing, lang, limit, workers, max_inflight, start_ns, end_ns, out, failed, ports = sys.argv[1:]
+timing, lang, limit, workers, start_ns, end_ns, out, failed, ports = sys.argv[1:]
 start_ns = int(start_ns)
 end_ns = int(end_ns)
 payload = {
     "language": lang,
     "limit": int(limit),
     "workers_per_port": int(workers),
-    "max_inflight": int(max_inflight),
     "start_ns": start_ns,
     "end_ns": end_ns,
     "wall_sec": (end_ns - start_ns) / 1_000_000_000,

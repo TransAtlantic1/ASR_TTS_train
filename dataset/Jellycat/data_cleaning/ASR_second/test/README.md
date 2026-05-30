@@ -104,7 +104,6 @@ bash data_cleaning/ASR_second/test/h200_monitor_gpu.sh
 RUN_DIR=data_cleaning/ASR_second/test/runs/<RUN_ID> \
 LIMIT=100 \
 WORKERS_PER_PORT=1 \
-MAX_INFLIGHT=32 \
 LABEL=limit100_wpp1 \
 bash data_cleaning/ASR_second/test/h200_run_benchmark.sh
 ```

@@ -10,10 +10,9 @@ import re
 import threading
 import time
 import unicodedata
-from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
-from itertools import cycle
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 
 try:
     import jiwer
@@ -57,6 +56,7 @@ DEFAULT_AUDIO_ROOT = (
     "zhikang/Jellycat"
 )
 DEFAULT_PORTS = os.environ.get("PORTS", "8000")
+SCHEDULER_NAME = "duration-interleave-worker-pull"
 
 ZH_ALIASES = {
     "zh",
@@ -248,7 +248,7 @@ def call_asr(
     endpoint_template: str,
     timeout: int,
     max_retries: int,
-) -> str:
+) -> Tuple[str, int]:
     if requests is None:
         raise RuntimeError("ASR calls require requests")
     payload = {
@@ -277,7 +277,7 @@ def call_asr(
                 timeout=timeout,
             )
             response.raise_for_status()
-            return response.json()["choices"][0]["message"]["content"]
+            return response.json()["choices"][0]["message"]["content"], port
         except requests.RequestException as exc:
             last_err = exc
             if attempt < attempts - 1:
@@ -367,12 +367,87 @@ def read_done_ids(output: Optional[Path]) -> set:
     return done
 
 
+def duration_score(record: Dict[str, Any]) -> float:
+    try:
+        value = float(record.get("duration"))
+    except (TypeError, ValueError):
+        return -1.0
+    if value != value or value < 0:
+        return -1.0
+    return value
+
+
+def nonnegative_duration(record: Dict[str, Any]) -> float:
+    value = duration_score(record)
+    return value if value > 0 else 0.0
+
+
+def safe_div(numerator: float, denominator: float) -> float:
+    return numerator / denominator if denominator > 0 else 0.0
+
+
+class RecordSource:
+    def __init__(
+        self,
+        records: Iterator[Dict[str, Any]],
+        done: set,
+        duration_sort_buffer: int,
+    ) -> None:
+        self.records = records
+        self.done = done
+        self.duration_sort_buffer = max(1, duration_sort_buffer)
+        self.lock = threading.Lock()
+        self.buffer: List[Dict[str, Any]] = []
+        self.exhausted = False
+        self.skipped = 0
+        self.submitted = 0
+
+    def _fill_duration_interleave_buffer_unlocked(self) -> None:
+        records: List[Dict[str, Any]] = []
+        while not self.exhausted and len(records) < self.duration_sort_buffer:
+            try:
+                record = next(self.records)
+            except StopIteration:
+                self.exhausted = True
+                break
+            if record["id"] in self.done:
+                self.skipped += 1
+                continue
+            records.append(record)
+
+        records.sort(key=duration_score, reverse=True)
+        interleaved: List[Dict[str, Any]] = []
+        left = 0
+        right = len(records) - 1
+        while left <= right:
+            interleaved.append(records[left])
+            left += 1
+            if left <= right:
+                interleaved.append(records[right])
+                right -= 1
+        self.buffer = list(reversed(interleaved))
+
+    def next_record(self) -> Optional[Dict[str, Any]]:
+        with self.lock:
+            if not self.buffer and not self.exhausted:
+                self._fill_duration_interleave_buffer_unlocked()
+            if not self.buffer:
+                return None
+            self.submitted += 1
+            return self.buffer.pop()
+
+    def stats(self) -> Tuple[int, int]:
+        with self.lock:
+            return self.submitted, self.skipped
+
+
 def process_one(
     meta: Dict[str, Any],
     port: int,
     ports: Sequence[int],
     args: argparse.Namespace,
 ) -> Dict[str, Any]:
+    process_started = time.monotonic()
     base = {
         "id": meta["id"],
         "audio_path": meta["audio_path"],
@@ -388,6 +463,12 @@ def process_one(
         "zh_pinyin_tone3_wer": None,
         "edits": [],
         "error": None,
+        "scheduler": SCHEDULER_NAME,
+        "asr_start_port": port,
+        "asr_port": None,
+        "process_sec": None,
+        "asr_request_sec": None,
+        "score_sec": None,
     }
 
     try:
@@ -396,21 +477,29 @@ def process_one(
         audio_path = Path(meta["audio_path"])
         if not audio_path.exists():
             raise FileNotFoundError(str(audio_path))
-        raw = call_asr(
-            audio_path=audio_path,
-            start_port=port,
-            ports=ports,
-            endpoint_template=args.endpoint_template,
-            timeout=args.timeout,
-            max_retries=args.max_retries,
-        )
+        asr_started = time.monotonic()
+        try:
+            raw, asr_port = call_asr(
+                audio_path=audio_path,
+                start_port=port,
+                ports=ports,
+                endpoint_template=args.endpoint_template,
+                timeout=args.timeout,
+                max_retries=args.max_retries,
+            )
+        finally:
+            base["asr_request_sec"] = round(time.monotonic() - asr_started, 3)
         hyp_text = parse_hyp_text(raw)
+        score_started = time.monotonic()
         scores = score_and_diff(meta["language"], meta["ref_text"], hyp_text, args.include_edits)
+        base["score_sec"] = round(time.monotonic() - score_started, 3)
         base.update(scores)
         base["hyp_text"] = hyp_text
         base["raw_asr_output"] = raw
+        base["asr_port"] = asr_port
     except Exception as exc:
         base["error"] = str(exc)
+    base["process_sec"] = round(time.monotonic() - process_started, 3)
     return base
 
 
@@ -431,6 +520,8 @@ def dependency_status(records: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
 def dry_run(records: Sequence[Dict[str, Any]], args: argparse.Namespace) -> int:
     logger.info("dry-run: loaded %d records", len(records))
     logger.info("dry-run: ports=%s", parse_ports(args.ports))
+    logger.info("dry-run: scheduler=%s", SCHEDULER_NAME)
+    logger.info("dry-run: load_log_interval=%s", args.load_log_interval)
     status = dependency_status(records)
     logger.info("dry-run dependency status: %s", json.dumps(status, ensure_ascii=False))
     for rec in records[: min(5, len(records))]:
@@ -463,6 +554,204 @@ def dry_run(records: Sequence[Dict[str, Any]], args: argparse.Namespace) -> int:
     return 0
 
 
+def run_duration_interleave_worker_pull(
+    args: argparse.Namespace,
+    output: Path,
+    failed_output: Optional[Path],
+    done: set,
+    ports: Sequence[int],
+    total_workers: int,
+    duration_sort_buffer: int,
+) -> Tuple[int, int, int, int]:
+    record_source = RecordSource(
+        records=iter_records(args),
+        done=done,
+        duration_sort_buffer=duration_sort_buffer,
+    )
+    write_lock = threading.Lock()
+    progress_lock = threading.Lock()
+    stats_lock = threading.Lock()
+    start_time = time.monotonic()
+    stop_monitor = threading.Event()
+    port_stats = {
+        port: {
+            "assigned": 0,
+            "completed": 0,
+            "failures": 0,
+            "inflight": 0,
+            "duration_assigned": 0.0,
+            "duration_completed": 0.0,
+            "process_sec_completed": 0.0,
+            "asr_request_sec_completed": 0.0,
+            "score_sec_completed": 0.0,
+        }
+        for port in ports
+    }
+    pbar = tqdm(desc="ASR verify", unit="utt") if tqdm is not None else None
+    completed = 0
+    failures = 0
+
+    last_snapshot = {
+        port: {
+            "completed": 0,
+            "failures": 0,
+            "duration_completed": 0.0,
+            "process_sec_completed": 0.0,
+            "asr_request_sec_completed": 0.0,
+            "score_sec_completed": 0.0,
+        }
+        for port in ports
+    }
+    last_snapshot_time = start_time
+
+    def log_load_stats(final: bool = False) -> None:
+        nonlocal last_snapshot_time, last_snapshot
+        now = time.monotonic()
+        elapsed = max(now - start_time, 1e-9)
+        interval = max(now - last_snapshot_time, 1e-9)
+        submitted_now, skipped_now = record_source.stats()
+        with stats_lock:
+            snapshot = {port: dict(port_stats[port]) for port in ports}
+            total_completed = sum(item["completed"] for item in snapshot.values())
+            total_inflight = sum(item["inflight"] for item in snapshot.values())
+            total_failures = sum(item["failures"] for item in snapshot.values())
+            total_duration_completed = sum(item["duration_completed"] for item in snapshot.values())
+        logger.info(
+            "load_stats kind=%s total elapsed_sec=%.1f submitted=%d skipped=%d completed=%d inflight=%d failures=%d rate_utt_s=%.2f audio_sec_per_sec=%.2f",
+            "final" if final else "periodic",
+            elapsed,
+            submitted_now,
+            skipped_now,
+            total_completed,
+            total_inflight,
+            total_failures,
+            safe_div(total_completed, elapsed),
+            safe_div(total_duration_completed, elapsed),
+        )
+        for port in ports:
+            current = snapshot[port]
+            previous = last_snapshot[port]
+            delta_completed = current["completed"] - previous["completed"]
+            delta_failures = current["failures"] - previous["failures"]
+            delta_duration = current["duration_completed"] - previous["duration_completed"]
+            delta_process = current["process_sec_completed"] - previous["process_sec_completed"]
+            delta_asr = current["asr_request_sec_completed"] - previous["asr_request_sec_completed"]
+            delta_score = current["score_sec_completed"] - previous["score_sec_completed"]
+            logger.info(
+                "load_stats kind=%s port=%d inflight=%d assigned=%d completed=%d failures=%d recent_completed=%d recent_failures=%d recent_utt_s=%.2f recent_audio_sec_per_sec=%.2f avg_process_sec=%.3f avg_asr_request_sec=%.3f avg_score_sec=%.3f completed_audio_sec=%.1f",
+                "final" if final else "periodic",
+                port,
+                current["inflight"],
+                current["assigned"],
+                current["completed"],
+                current["failures"],
+                delta_completed,
+                delta_failures,
+                safe_div(delta_completed, interval),
+                safe_div(delta_duration, interval),
+                safe_div(delta_process, delta_completed),
+                safe_div(delta_asr, delta_completed),
+                safe_div(delta_score, delta_completed),
+                current["duration_completed"],
+            )
+        last_snapshot = {
+            port: {
+                "completed": snapshot[port]["completed"],
+                "failures": snapshot[port]["failures"],
+                "duration_completed": snapshot[port]["duration_completed"],
+                "process_sec_completed": snapshot[port]["process_sec_completed"],
+                "asr_request_sec_completed": snapshot[port]["asr_request_sec_completed"],
+                "score_sec_completed": snapshot[port]["score_sec_completed"],
+            }
+            for port in ports
+        }
+        last_snapshot_time = now
+
+    def monitor_loop() -> None:
+        interval = max(1.0, float(args.load_log_interval))
+        while not stop_monitor.wait(interval):
+            log_load_stats(final=False)
+
+    monitor_thread: Optional[threading.Thread] = None
+    if args.load_log_interval > 0:
+        monitor_thread = threading.Thread(target=monitor_loop, name="load-monitor", daemon=True)
+        monitor_thread.start()
+
+    with output.open("a", encoding="utf-8") as fout:
+        ffail = failed_output.open("a", encoding="utf-8") if failed_output else None
+        try:
+
+            def worker_loop(port: int) -> None:
+                nonlocal completed, failures
+                while True:
+                    rec_in = record_source.next_record()
+                    if rec_in is None:
+                        return
+                    rec_duration = nonnegative_duration(rec_in)
+                    with stats_lock:
+                        port_stats[port]["assigned"] += 1
+                        port_stats[port]["inflight"] += 1
+                        port_stats[port]["duration_assigned"] += rec_duration
+                    rec_out = process_one(rec_in, port, ports, args)
+                    with write_lock:
+                        fout.write(json.dumps(rec_out, ensure_ascii=False) + "\n")
+                        fout.flush()
+                        if rec_out.get("error") and ffail is not None:
+                            ffail.write(json.dumps(rec_out, ensure_ascii=False) + "\n")
+                            ffail.flush()
+                    process_sec = float(rec_out.get("process_sec") or 0.0)
+                    asr_request_sec = float(rec_out.get("asr_request_sec") or 0.0)
+                    score_sec = float(rec_out.get("score_sec") or 0.0)
+                    with stats_lock:
+                        completed += 1
+                        port_stats[port]["completed"] += 1
+                        port_stats[port]["inflight"] -= 1
+                        port_stats[port]["duration_completed"] += rec_duration
+                        port_stats[port]["process_sec_completed"] += process_sec
+                        port_stats[port]["asr_request_sec_completed"] += asr_request_sec
+                        port_stats[port]["score_sec_completed"] += score_sec
+                        if rec_out.get("error"):
+                            failures += 1
+                            port_stats[port]["failures"] += 1
+                    if pbar is not None:
+                        with progress_lock:
+                            pbar.update(1)
+
+            with ThreadPoolExecutor(max_workers=total_workers) as pool:
+                futures = [
+                    pool.submit(worker_loop, port)
+                    for port in ports
+                    for _ in range(max(1, args.workers_per_port))
+                ]
+                for fut in as_completed(futures):
+                    fut.result()
+        finally:
+            stop_monitor.set()
+            if monitor_thread is not None:
+                monitor_thread.join(timeout=5)
+            log_load_stats(final=True)
+            if pbar is not None:
+                pbar.close()
+            if ffail is not None:
+                ffail.close()
+
+    submitted, skipped = record_source.stats()
+    for port in ports:
+        stats = port_stats[port]
+        logger.info(
+            "port_stats port=%d assigned=%d completed=%d failures=%d duration_completed=%.1f process_sec_completed=%.1f asr_request_sec_completed=%.1f score_sec_completed=%.1f",
+            port,
+            stats["assigned"],
+            stats["completed"],
+            stats["failures"],
+            stats["duration_completed"],
+            stats["process_sec_completed"],
+            stats["asr_request_sec_completed"],
+            stats["score_sec_completed"],
+        )
+    return submitted, completed, skipped, failures
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         description=(
@@ -487,12 +776,18 @@ def build_arg_parser() -> argparse.ArgumentParser:
     ap.add_argument("--timeout", type=int, default=300)
     ap.add_argument("--max-retries", type=int, default=3)
     ap.add_argument(
-        "--max-inflight",
+        "--duration-sort-buffer",
         type=int,
         default=0,
-        help="Maximum queued futures; default is workers * 4.",
+        help="Records buffered per interleave refill; default is max(10000, workers * 16).",
     )
     ap.add_argument("--limit", type=int)
+    ap.add_argument(
+        "--load-log-interval",
+        type=float,
+        default=60.0,
+        help="Seconds between per-port load_stats logs; set 0 to disable.",
+    )
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--no-edits", dest="include_edits", action="store_false")
     ap.set_defaults(include_edits=True)
@@ -545,12 +840,15 @@ def main() -> int:
     done = read_done_ids(output)
     ports = parse_ports(args.ports)
     total_workers = max(1, args.workers_per_port) * len(ports)
-    max_inflight = args.max_inflight if args.max_inflight > 0 else total_workers * 4
+    duration_sort_buffer = args.duration_sort_buffer
+    if duration_sort_buffer <= 0:
+        duration_sort_buffer = max(10000, total_workers * 16)
     logger.info(
-        "workers=%d ports=%s max_inflight=%d output=%s resume_done=%d",
+        "workers=%d ports=%s scheduler=%s duration_sort_buffer=%d output=%s resume_done=%d",
         total_workers,
         ports,
-        max_inflight,
+        SCHEDULER_NAME,
+        duration_sort_buffer,
         output,
         len(done),
     )
@@ -560,60 +858,15 @@ def main() -> int:
     if failed_output is not None:
         failed_output.parent.mkdir(parents=True, exist_ok=True)
 
-    port_iter = cycle(ports)
-    write_lock = threading.Lock()
-    pbar = tqdm(desc="ASR verify", unit="utt") if tqdm is not None else None
-    failures = 0
-    submitted = 0
-    completed = 0
-    skipped = 0
-
-    with output.open("a", encoding="utf-8") as fout:
-        ffail = failed_output.open("a", encoding="utf-8") if failed_output else None
-        try:
-            with ThreadPoolExecutor(max_workers=total_workers) as pool:
-                futures = {}
-                records_iter = iter_records(args)
-                exhausted = False
-
-                while futures or not exhausted:
-                    while not exhausted and len(futures) < max_inflight:
-                        try:
-                            rec_in = next(records_iter)
-                        except StopIteration:
-                            exhausted = True
-                            break
-                        if rec_in["id"] in done:
-                            skipped += 1
-                            continue
-                        fut = pool.submit(process_one, rec_in, next(port_iter), ports, args)
-                        futures[fut] = rec_in["id"]
-                        submitted += 1
-
-                    if not futures:
-                        continue
-
-                    ready, _ = wait(futures, return_when=FIRST_COMPLETED)
-                    for fut in ready:
-                        futures.pop(fut, None)
-                        rec_out = fut.result()
-                        completed += 1
-                        with write_lock:
-                            fout.write(json.dumps(rec_out, ensure_ascii=False) + "\n")
-                            fout.flush()
-                            if rec_out.get("error") and ffail is not None:
-                                ffail.write(json.dumps(rec_out, ensure_ascii=False) + "\n")
-                                ffail.flush()
-                        if rec_out.get("error"):
-                            failures += 1
-                        if pbar is not None:
-                            pbar.update(1)
-        finally:
-            if pbar is not None:
-                pbar.close()
-            if ffail is not None:
-                ffail.close()
-
+    submitted, completed, skipped, failures = run_duration_interleave_worker_pull(
+        args=args,
+        output=output,
+        failed_output=failed_output,
+        done=done,
+        ports=ports,
+        total_workers=total_workers,
+        duration_sort_buffer=duration_sort_buffer,
+    )
     logger.info("submitted=%d completed=%d skipped=%d", submitted, completed, skipped)
     if failures:
         logger.warning("Completed with %d failed records", failures)
